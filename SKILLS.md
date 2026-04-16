@@ -1,20 +1,20 @@
-# Liberar memoria Docker y reducir VHDX
+# Free Docker Memory and Shrink VHDX
 
-## Paso 1 — Limpiar espacio interno de Docker
+## Step 1 — Clean Docker internal space
 
-Ejecutar en terminal (no requiere admin):
+Run in terminal (no admin required):
 
 ```bash
 docker system prune -a --volumes
 ```
 
-Esto elimina: contenedores detenidos, imágenes sin usar, volúmenes huérfanos y caché de build.
+This removes: stopped containers, unused images, orphaned volumes, and build cache.
 
 ---
 
-## Paso 2 — Forzar cierre de WSL y Docker
+## Step 2 — Force shutdown of WSL and Docker
 
-En PowerShell:
+In PowerShell:
 
 ```powershell
 wsl --shutdown
@@ -24,32 +24,32 @@ taskkill /F /IM "Docker Desktop.exe" 2>$null
 taskkill /F /IM "com.docker.backend.exe" 2>$null
 ```
 
-Verificar que WSL está detenido:
+Verify WSL is stopped:
 
 ```powershell
 wsl -l --running
-# Debe mostrar: "There are no running distributions."
+# Should show: "There are no running distributions."
 ```
 
 ---
 
-## Paso 3 — Compactar el archivo VHDX con diskpart
+## Step 3 — Compact the VHDX file with diskpart
 
-> Requiere **PowerShell como Administrador**.  
-> `Optimize-VHD` NO funciona en Windows 11 Home — usar `diskpart` en su lugar.
+> Requires **PowerShell as Administrator**.  
+> `Optimize-VHD` does NOT work on Windows 11 Home — use `diskpart` instead.
 
-Primero confirmar la ruta del archivo:
+First confirm the file path:
 
 ```powershell
 Get-ChildItem "$env:LOCALAPPDATA\Docker" -Recurse -Filter "*.vhdx" | Select FullName
 ```
 
-Ruta habitual:
+Usual path:
 ```
 C:\Users\alejo\AppData\Local\Docker\wsl\disk\docker_data.vhdx
 ```
 
-Abrir diskpart como Administrador y ejecutar uno por uno:
+Open diskpart as Administrator and run one by one:
 
 ```
 diskpart
@@ -60,18 +60,18 @@ detach vdisk
 exit
 ```
 
-> El proceso puede tardar varios minutos. Al terminar muestra el porcentaje reducido.
+> The process can take several minutes. When done it shows the percentage reduced.
 
 ---
 
-## Paso 4 — Reiniciar Docker Desktop
+## Step 4 — Restart Docker Desktop
 
-Abrir Docker Desktop normalmente.
+Open Docker Desktop normally.
 
 ---
 
-## Notas
+## Notes
 
-- Si `attach vdisk readonly` falla con "being used by another process": reiniciar Windows y ejecutar diskpart **antes** de abrir Docker Desktop.
-- `Optimize-VHD` requiere el módulo Hyper-V (solo disponible en Windows Pro/Enterprise).
-- El VHDX no se achica automáticamente tras `docker prune` — el paso 3 es necesario para recuperar espacio físico en disco.
+- If `attach vdisk readonly` fails with "being used by another process": restart Windows and run diskpart **before** opening Docker Desktop.
+- `Optimize-VHD` requires the Hyper-V module (only available on Windows Pro/Enterprise).
+- The VHDX does not shrink automatically after `docker prune` — step 3 is necessary to reclaim physical disk space.
